@@ -1,24 +1,33 @@
 public class Time {
     private int hour;
     private int minute;
-
-    public Time(int hour, int minute) {
-        set(hour, minute);
+    private boolean isValidated;
+	
+    public Time(int hour, int minute, boolean isValidated) {
+        set(hour, minute, isValidated);
+    }
+	
+    public Time(Time t, boolean isValidated) {
+        set(t, isValidated);
     }
 
-    public void set(int hour, int minute) {
-        if(0 <= hour && hour <= 23 && 0 <= minute && minute <= 59) {
-            this.hour = hour; this.minute = minute;
+
+    public void set(int hour, int minute, boolean isValidated) {
+	if(isValidated)
+        	if(0 <= hour && hour <= 23 && 0 <= minute && minute <= 59) {
+            	this.hour = hour; this.minute = minute;
+        	} else {
+            	throw new IllegalArgumentException("Invalid time.: " + Integer.toString(hour) + ":" + Integer.toString(minute) + " { 0 <= h <= 23 && 0 <= m <= 59 }");
         } else {
-            throw new IllegalArgumentException("Invalid time.: " + Integer.toString(hour) + ":" + Integer.toString(minute) + " { 0 <= h <= 23 && 0 <= m <= 59 }");
-        }
+		this.hour = hour; this.minute = minute;
+	}
     }
 
-    public void set(Time time) {
+    public void set(Time time, boolean isValidated) {
         int h, m;
         h = time.getHour();
         m = time.getMinute();
-        set(h, m);
+        set(h, m, isValidated);
     }
 
     public int getHour() {
@@ -56,36 +65,42 @@ public class Time {
         System.out.println(toString(t));
     }
 
-    public static Time diff(Time t1, Time t2) {
-        int h1, h2, m1, m2;
-        h1 = t1.getHour();
-        h2 = t2.getHour();
-        m1 = t1.getMinute();
-        m2 = t2.getMinute();
+    public static Time normalize(Time t) {
+        int total_minutes = t.getHour() * 60 + t.getMinute();
         int hour, min;
-        min = m1 - m2;
-        hour = h1 - h2;
 
-        if(min < 0) {
-            min = 60 + min;
-            hour -= 1;
-        } else {
-            if(60 < min) {
-                min = min - 60;
-                hour += 1;
-            }
+        while(total_minutes < 0) {
+            total_minutes += 1440;
         }
 
-        if(hour < 0) {
-            min = 23 + hour;
-        } else {
-            if(23 < hour) {
-                hour = hour - 24;
-            }
-        }
+        int hours = (total_minutes / 60) % 24;
+        int mins  = total_minutes % 60;
 
-        Time diff = new Time(hour, min);
-        return diff;
+        return new Time(hours, mins, true);
+    }
+
+    public static Time diff(Time t1, Time t2, boolean norm) {
+        int mins1 = t1.getHour() * 60 + t1.getMinute();
+        int mins2 = t2.getHour() * 60 + t2.getMinute();
+        int ttlms = mins2 - mins1;
+        int hours = ttlms / 60;
+        int minutes = ttlms % 60;
+        Time res = new Time(hours, minutes, false);
+        if (norm) {
+            res = Time.normalize(res);
+        }
+        return res;
+    }
+
+    public static Time add(Time t1, Time t2, boolean norm) {
+        int total_minutes = t1.getHour() * 60 + t2.getHour() * 60 + t1.getMinute() + t2.getMinute();
+        int hours = total_minutes / 60;
+        int minutes = total_minutes % 60;
+        Time res = new Time(hours, minutes, false);
+        if (norm) {
+            res = Time.normalize(res);
+        }
+        return res;
     }
 
     public static String toWritten (Time t) {
@@ -93,5 +108,26 @@ public class Time {
         h = t.getHour();
         m = t.getMinute();
         return String.format("%d Hour(s) and %d Minute(s)", h, m);
+    }
+
+    public static Time abs(Time t) {
+        int h, m;
+        h = t.getHour(); m = t.getMinute();
+        if (h < 0) {
+            h = -h;
+        }
+        if (m < 0) {
+            m = -m;
+        }
+        return new Time(h, m, false);
+    }
+
+    public static boolean isNegative(Time t) {
+        int h, m;
+        h = t.getHour(); m = t.getMinute();
+        if (h < 0 || m < 0) {
+            return true;
+        }
+        return false;
     }
 }

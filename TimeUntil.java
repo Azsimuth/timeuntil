@@ -23,15 +23,27 @@ public class TimeUntil {
             hour = Integer.parseInt(splits[0]);
             minute = Integer.parseInt(splits[1]);
         
-            Time t = new Time(hour, minute);
+            Time goalTime = new Time(hour, minute, true);
             
             LocalTime timeObject = LocalTime.now();
-            Time currentTime = new Time(timeObject.getHour(), timeObject.getMinute());
+            Time currentTime = new Time(timeObject.getHour(), timeObject.getMinute(), false);
             
-            Time diff = Time.diff(t, currentTime);
-            String start = Time.toString(t, false);
-            String written = Time.toWritten(diff);
-            System.out.println("Time remaining until " + start + ": " + written);
+            Time diff = Time.diff(currentTime, goalTime, false);
+            
+            boolean isTomorrow = Time.isNegative(diff);
+
+            if(!isTomorrow) {
+                String goal = Time.toString(goalTime, false);
+                String written = Time.toWritten(diff);
+                System.out.println("Time remaining until " + goal + " is " + written);
+            } else {
+				Time untilThen = new Time(goalTime, false);
+				Time untilMidn = Time.diff(currentTime, new Time(24, 0, false), false);
+				untilThen = untilThen.add(untilThen, untilMidn, false);
+				String written = Time.toWritten(untilThen);
+                String goal = Time.toString(goalTime, false);
+                System.out.println("Time remaining until tomorrow " + goal + " is " + written);
+            }
 
         } catch (IllegalArgumentException e) {
             System.err.println(e.getMessage());
